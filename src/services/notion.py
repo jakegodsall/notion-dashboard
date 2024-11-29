@@ -18,6 +18,23 @@ class NotionClient:
             raise ValueError(f"No configuration found for integration {integration_name}")
         return integrations[integration_name]
 
+    def get_related_id(self, related_database_id, key, value):
+        response = self.client.databases.query(
+            database_id=related_database_id,
+            filter={
+                "property": key,
+                "rich_text": {
+                    "equals": value
+                }
+            }
+        )
+        print("RESULTS", response)
+        results = response.get("results", [])
+
+        if results:
+            return results[0]["id"]
+        return None
+
     def build_properties(self, field_mappings, data: dict):
         properties = {}
         for field, config in field_mappings.items():
@@ -40,9 +57,11 @@ class NotionClient:
                 elif field_type == "relation":
                     if config["key"] not in data:
                         raise KeyError(f"Missing key '{config['key']}' in data for 'relation' field.")
-                    relation_database_id = config["relation"]["database_id"]
+                    related_database_id = config["relation"]["database_id"]
+                    related_field_name = config["relation"]["field_name"]
                     properties[label] = {
-                        "relation": [{"id": related_id} for related_id in data.get(config["key"], [])]
+                        "relation": [
+                            {"id": self.get_related_id(related_database_id, related_field_name, data[config["key"]])}]
                     }
                 else:
                     raise ValueError(f"Unsupported field type: {field_type}")
