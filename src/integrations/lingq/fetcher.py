@@ -2,8 +2,8 @@ import requests
 
 
 class LingQFetcher:
-    def __init__(self, api_key):
-        self.api_key = api_key
+    def __init__(self):
+        self.api_key = os.getenv("LINGQ_API_KEY")
         self.base_url = "https://www.lingq.com/api/v2/"
 
     def fetch_languages(self, active = True):
