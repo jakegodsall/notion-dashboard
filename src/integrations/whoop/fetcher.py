@@ -2,15 +2,9 @@ import os
 from datetime import datetime, time, timezone
 from dotenv import load_dotenv
 from whoop import WhoopClient
-from sport_map import sport_map
+from src.integrations.whoop.sport_map import sport_map
 
 load_dotenv()
-
-
-def get_sport_by_id(id):
-    if id not in sport_map:
-        raise KeyError(f"Sport Id {id} does not represent a sport")
-    return sport_map.get(id)
 
 
 class WhoopFetcher:
@@ -38,9 +32,37 @@ class WhoopFetcher:
         start = datetime.combine(day.date(), time.min, tzinfo=timezone.utc).isoformat()  # 00:00 UTC
         end = datetime.combine(day.date(), time.max, tzinfo=timezone.utc).isoformat()  # 23:59 UTC
         workouts = self.client.get_workout_collection(start, end)
-        for workout in workouts:
-            workout['sport'] = get_sport_by_id(workout['sport_id'])
         return workouts
+
+    def transform_workouts(self, workouts):
+        transformed_workouts = []
+
+        for entry in workouts:
+            # Parse start and end times to calculate duration in minutes
+            start_time = datetime.fromisoformat(entry['start'].replace('Z', '+00:00'))
+            end_time = datetime.fromisoformat(entry['end'].replace('Z', '+00:00'))
+            duration = round((end_time - start_time).total_seconds() / 60)
+            distance = round(entry['score'].get('distance_meter', 0) / 1000, 1)
+            calories = round((entry['score'].get('kilojoule', 0) * 0.239006))
+
+            # Map sport_id to sport type
+            sport_type = sport_map.get(entry.get('sport_id', 0), "Unknown")
+
+            # Transform data
+            transformed_entry = {
+                "title": sport_type,
+                "date": start_time.date().isoformat(),
+                "duration": duration,
+                "distance": distance,
+                "sport": sport_type,
+                "calories": calories,
+                "hr_avg": entry['score'].get('average_heart_rate', 0),
+                "hr_max": entry['score'].get('max_heart_rate', 0),
+            }
+
+            transformed_workouts.append(transformed_entry)
+
+        return transformed_workouts
 
 
 def main():
@@ -48,6 +70,8 @@ def main():
 
     todays_workouts = whoop_client.get_workouts_for_given_date('2024-11-26')
     print(todays_workouts)
+    todays_workouts_transformed = whoop_client.transform_workouts(todays_workouts)
+    print(todays_workouts_transformed)
 
 
 if __name__ == '__main__':

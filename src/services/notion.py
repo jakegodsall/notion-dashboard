@@ -63,6 +63,24 @@ class NotionClient:
                         "relation": [
                             {"id": self.get_related_id(related_database_id, related_field_name, data[config["key"]])}]
                     }
+                elif field_type == "text":
+                    if config["key"] not in data:
+                        raise KeyError(f"Missing key '{config['key']}' in data for 'text' field.")
+                    properties[label] = {
+                        "rich_text": [{"type": "text", "text": {"content": data[config["key"]]}}]
+                    }
+                elif field_type == "select":
+                    if config["key"] not in data:
+                        raise KeyError(f"Missing key '{config['key']}' in data for 'select' field.")
+                    properties[label] = {
+                        "select": {"name": data[config["key"]]}
+                    }
+                elif field_type == "title":
+                    if config["key"] not in data:
+                        raise KeyError(f"Missing key '{config['key']}' in data for 'title' field.")
+                    properties[label] = {
+                        "title": [{"type": "text", "text": {"content": data[config["key"]]}}]
+                    }
                 else:
                     raise ValueError(f"Unsupported field type: {field_type}")
 
