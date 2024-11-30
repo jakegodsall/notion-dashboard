@@ -28,7 +28,6 @@ class NotionClient:
                 }
             }
         )
-        print("RESULTS", response)
         results = response.get("results", [])
 
         if results:
