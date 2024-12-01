@@ -32,7 +32,7 @@ into a Notion database, helping you track and manage your activities seamlessly.
    ```
 
 4. Configure the app:
-   - Add your Notion API credentials and database configurations to `src/config/notion.config.yml`.
+   - Add your Notion API credentials and database configurations to the `src/config/notion.config.yml` file.
 
 ---
 
