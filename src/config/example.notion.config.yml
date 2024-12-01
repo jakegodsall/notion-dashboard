@@ -1,5 +1,18 @@
-lingq:
-  database_id:
-    
-  field_mappings:
-  relationships:
+notion:
+  key: "notion-key"
+  integrations:
+    whoop:
+      database_id: "database-id"
+      field_mappings:
+        date:
+          label: "Date"
+          key: "date"
+          type: "date"
+        duration:
+          label: "Duration"
+          key: "duration"
+          type: "number"
+        distance:
+          label: "Distance (km)"
+          key: "distance"
+          type: "number"
