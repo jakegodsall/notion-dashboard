@@ -6,14 +6,13 @@ from src.integrations.lingq.fetcher import LingQFetcher
 from src.integrations.whoop.fetcher import WhoopFetcher
 from src.services.notion import NotionClient
 
-
 # Configuration
 notion_config_path = Path(__file__).resolve().parent / "src" / "config" / "notion.config.yml"
 
 # Initialize services
 lingq_service = LingQFetcher()
 whoop_service = WhoopFetcher()
-notion_client = NotionClient(notion_config_path)
+notion_client = NotionClient(str(notion_config_path))
 
 
 def sync_lingq():
