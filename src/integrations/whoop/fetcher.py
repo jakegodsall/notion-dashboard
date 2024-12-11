@@ -51,7 +51,7 @@ class WhoopFetcher:
             # Transform data
             transformed_entry = {
                 "title": sport_type,
-                "date": start_time.date().isoformat(),
+                "date": start_time.isoformat(),
                 "duration": duration,
                 "distance": distance,
                 "sport": sport_type,
