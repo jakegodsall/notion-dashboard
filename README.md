@@ -39,22 +39,38 @@ into a Notion database, helping you track and manage your activities seamlessly.
 ## Usage
 
 ### Run Manually
-You can manually run the sync process:
+The app can be run as a command-line tool using the `main.py` file:
 
 ```bash
-python src/main.py
+python main.py
 ```
 
-### Automate with Cron
-To automate the process, schedule the script using cron:
-1. Open the crontab editor:
-   ```bash
-   crontab -e
-   ```
-2. Add the following line to run the app daily at 23:55:
-   ```bash
-   55 23 * * * /path/to/your/venv/bin/python /path/to/notion-dashboard/src/main.py >> /path/to/logs/dashboard.logs 2>&1
-   ```
+### Run as an AWS Lambda Function
+
+The app includes a `lambda.py` file for running as an AWS Lambda function. This is useful for deploying the app to AWS Lambda for serverless execution.
+
+The project is set up using AWS SAM (Serverless Application Model) for easy deployment. To deploy:
+
+
+1. Install the AWS SAM CLI if not already installed:
+
+```bash
+brew install aws-sam-cli
+```
+
+2. Build the project:
+
+```bash
+sam build
+```
+
+3. Deploy the application:
+
+```bash
+sam deploy --guided
+```
+
+Follow the prompts to configure the environment variables and other configurations for deployment.
 
 ---
 
@@ -96,12 +112,6 @@ notion:
 - Check that your `PYTHONPATH` includes the project root directory:
   ```bash
   export PYTHONPATH=/path/to/notion-dashboard
-  ```
-
-#### Cron Job Doesn't Run
-- Check your cron logs:
-  ```bash
-  grep CRON /var/log/syslog
   ```
 
 ---
