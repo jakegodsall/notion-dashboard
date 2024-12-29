@@ -1,14 +1,13 @@
 import os
 import yaml
 from notion_client import Client
-from dotenv import load_dotenv
-
-load_dotenv()
-
 
 class NotionClient:
     def __init__(self, config_path: str):
-        self.client = Client(auth=os.environ.get("NOTION_API_KEY"))
+        api_key = os.environ.get("NOTION_API_KEY")
+        if not api_key:
+            raise ValueError("Notion API key not valid:", api_key)
+        self.client = Client(auth=api_key)
         with open(config_path, 'r') as file:
             self.config = yaml.safe_load(file).get("notion")
 

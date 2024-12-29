@@ -1,16 +1,13 @@
 import os
 from datetime import datetime, time, timezone
-from dotenv import load_dotenv
 from whoop import WhoopClient
 from src.integrations.whoop.sport_map import sport_map
-
-load_dotenv()
 
 
 class WhoopFetcher:
     def __init__(self):
-        username = os.getenv('WHOOP_USERNAME')
-        password = os.getenv('WHOOP_PASSWORD')
+        username = os.environ.get('WHOOP_USERNAME')
+        password = os.environ.get('WHOOP_PASSWORD')
 
         if not username or not password:
             raise ValueError("Please set WHOOP_USERNAME and WHOOP_PASSWORD in the .env file.")
@@ -68,7 +65,7 @@ class WhoopFetcher:
 def main():
     whoop_client = WhoopFetcher()
 
-    todays_workouts = whoop_client.get_workouts_for_given_date('2024-11-26')
+    todays_workouts = whoop_client.get_workouts_for_given_date(datetime.now().isoformat())
     print(todays_workouts)
     todays_workouts_transformed = whoop_client.transform_workouts(todays_workouts)
     print(todays_workouts_transformed)
