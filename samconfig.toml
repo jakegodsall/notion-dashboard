@@ -1,0 +1,35 @@
+# More information about the configuration file can be found here:
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-config.html
+version = 0.1
+
+[default.global.parameters]
+stack_name = "notion-dashboard"
+
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.validate.parameters]
+lint = true
+
+[default.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+s3_prefix = "notion-dashboard"
+region = "eu-west-2"
+disable_rollback = true
+parameter_overrides = "NotionApiKey=\"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\" WhoopUsername=\"jake.edward.godsall@gmail.com\" WhoopPassword=\"{2lwMr6@;J-6\" LingqApiKey=\"b9ffc4c3cd19828b526438ad6df8c3cd1fb7039d\""
+image_repositories = []
+
+[default.package.parameters]
+resolve_s3 = true
+
+[default.sync.parameters]
+watch = true
+
+[default.local_start_api.parameters]
+warm_containers = "EAGER"
+
+[default.local_start_lambda.parameters]
+warm_containers = "EAGER"
