@@ -4,11 +4,10 @@
 The **Notion Dashboard** app integrates data from different services
 into a Notion database, helping you track and manage your activities seamlessly.
 
-## Features
+## Integrations
 
 - **LingQ Integration**: Sync your daily word counts into a Notion database.
 - **WHOOP Integration**: Track your workouts, including metrics like heart rate, duration, and calories burned.
-- **Automatic Scheduling**: Use cron jobs to automate the synchronization process.
 
 ---
 
