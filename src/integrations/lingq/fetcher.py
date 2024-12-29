@@ -1,15 +1,15 @@
 import os
 from datetime import datetime
 import requests
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 class LingQFetcher:
     def __init__(self):
-        self.api_key = os.getenv("LINGQ_API_KEY")
         self.base_url = "https://www.lingq.com/api/v2/"
+
+        self.api_key = os.environ.get("LINGQ_API_KEY")
+        if not self.api_key:
+            raise ValueError("Please set the LINGQ_API_KEY in the .env file.")
 
     def make_api_request(self, endpoint):
         url = self.base_url + endpoint
@@ -17,7 +17,6 @@ class LingQFetcher:
             'Authorization': 'Token ' + self.api_key,
             'accept': 'application/json'
         }
-
         return requests.get(url, headers=headers)
 
     def fetch_languages(self, active=True):
