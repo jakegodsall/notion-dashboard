@@ -1,9 +1,12 @@
 # macOS
 .DS_Store
 
-# Project
+# AWS
 .aws-sam/
 env.json
+samconfig.toml
+
+# Project
 .env
 notion.config.yml
 
