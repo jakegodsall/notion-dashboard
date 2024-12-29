@@ -1,5 +1,4 @@
 import os
-import sys
 from pathlib import Path
 from datetime import datetime
 from src.integrations.lingq.fetcher import LingQFetcher
@@ -34,7 +33,6 @@ def sync_whoop():
 
 def lambda_handler(event, context):
     print(f"[{datetime.now()}] Starting the synchronization tasks...")
-    sync_lingq()
     sync_whoop()
     print(f"[{datetime.now()}] All tasks completed.")
     return {"status": "success"}
