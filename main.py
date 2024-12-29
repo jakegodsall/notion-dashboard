@@ -1,7 +1,7 @@
 import os
 import sys
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime
 from src.integrations.lingq.fetcher import LingQFetcher
 from src.integrations.whoop.fetcher import WhoopFetcher
 from src.services.notion import NotionClient
@@ -25,7 +25,7 @@ def sync_lingq():
 
 def sync_whoop():
     print(f"[{datetime.now()}] Running WHOOP sync...")
-    workouts = whoop_service.get_workouts_for_given_date((datetime.now() - timedelta(days=day)).isoformat())
+    workouts = whoop_service.get_workouts_for_given_date((datetime.now()).isoformat())
     transformed_workouts = whoop_service.transform_workouts(workouts)
     for workout in transformed_workouts:
         notion_client.create_page("whoop", workout)

@@ -1,7 +1,12 @@
+# macOS
+.DS_Store
+
 # Project
+.aws-sam/
+env.json
 .env
 notion.config.yml
-__pycache__/
 
-# PyCharm
-.idea/
+# Python
+__pycache__/
+.venv/
