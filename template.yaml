@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  notion-dashboard
+
+  Sample SAM Template for notion-dashboard
+
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  SynchronizationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda.lambda_handler
+      Environment:
+        Variables:
+          LINGQ_API_KEY: !Ref LingqApiKey
+          WHOOP_USERNAME: !Ref WhoopUsername
+          WHOOP_PASSWORD: !Ref WhoopPassword
+          NOTION_API_KEY: !Ref NotionApiKey
+      Runtime: python3.13
+      MemorySize: 256
+      Timeout: 60
+      Architectures:
+        - x86_64
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 12 * * ? *)
+            Name: NotionDashboardCron
+            Description: "Triggers the Notion Dashboard Synchronisation Lambda function daily at 12:00"
+
+
+Parameters:
+  NotionApiKey:
+    Type: String
+    Description: "Notion API Key"
+  WhoopUsername:
+    Type: String
+    Description: "Whoop Username"
+  WhoopPassword:
+    Type: String
+    Description: "Whoop Parssword"
+  LingqApiKey:
+    Type: String
+    Description: "LingQ API Key"
+
+Outputs:
+  SynchronizationFunctionArn:
+    Description: "ARN of the Synchronization Function"
+    Value: !GetAtt SynchronizationFunction.Arn
+  SynchronizationFunctionIamRole:
+    Description: "Implicit IAM Role created for the Synchronization Function"
+    Value: !GetAtt SynchronizationFunctionRole.Arn
+
