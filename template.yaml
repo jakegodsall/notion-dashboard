@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
   notion-dashboard
@@ -32,10 +32,9 @@ Resources:
         ScheduledEvent:
           Type: Schedule
           Properties:
-            Schedule: cron(0 12 * * ? *)
+            Schedule: cron(55 11 * * ? *)
             Name: NotionDashboardCron
             Description: "Triggers the Notion Dashboard Synchronisation Lambda function daily at 12:00"
-
 
 Parameters:
   NotionApiKey:
@@ -58,4 +57,3 @@ Outputs:
   SynchronizationFunctionIamRole:
     Description: "Implicit IAM Role created for the Synchronization Function"
     Value: !GetAtt SynchronizationFunctionRole.Arn
-
