@@ -19,7 +19,7 @@ whoop_service = WhoopFetcher()
 notion_client = NotionClient(str(notion_config_path))
 
 # Set up logging
-logging.baseConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 def sync_lingq():
@@ -43,7 +43,7 @@ def sync_whoop(date=None):
     date = date or datetime.now().isoformat()
     logger.info("Running Whoop sync...")
     try:
-        workouts = whoop_service.get_workouts_for_given_date(datetime.now().isoformat())
+        workouts = whoop_service.get_workouts_for_given_date(date)
         transformed_workouts = whoop_service.transform_workouts(workouts)
         for workout in transformed_workouts:
             notion_client.create_page("whoop", workout)
@@ -53,6 +53,28 @@ def sync_whoop(date=None):
         logger.error(f"Error during Whoop sync: {e}")
 
 
+def main():
+    parser = argparse.ArgumentParser(
+        description="Notion dashboard CLI: Sync data from multiple sources with Notion database tables."
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True, help="Available commands")
+
+    lingq_parser = subparsers.add_parser("sync-lingq", help="Sync current known word counts with Notion.")
+    
+    whoop_parser = subparsers.add_parser("sync-whoop", help="Sync Whoop activity with Notion.")
+    whoop_parser.add_argument(
+        "--date",
+        type=str,
+        help="Date for syncing Whoop data (in ISO8601 format, e.g. '2025-01-01'). Defaults to today"
+    )
+
+    args = parser.parse_args()
+
+    if args.command == 'sync-lingq':
+        sync_lingq()
+    if args.command == 'sync-whoop':
+        sync_whoop(date=args.date)
+
+
 if __name__ == "__main__":
-    # sync_lingq()
-    sync_whoop()
+    main()
