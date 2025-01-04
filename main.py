@@ -36,10 +36,11 @@ def sync_lingq():
         logger.error(f"Error during LingQ sync: {e}")
 
 
-def sync_whoop():
+def sync_whoop(date=None):
     """
     Sync Whoop data with Notion.
     """
+    date = date or datetime.now().isoformat()
     logger.info("Running Whoop sync...")
     try:
         workouts = whoop_service.get_workouts_for_given_date(datetime.now().isoformat())
