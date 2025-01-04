@@ -13,6 +13,7 @@ jmespath==1.0.1
 notion-client==2.2.1
 pycparser==2.22
 python-dateutil==2.9.0.post0
+python-dotenv==1.0.1
 PyYAML==6.0.2
 requests==2.32.3
 s3transfer==0.10.4
