@@ -65,7 +65,7 @@ def main():
     whoop_parser.add_argument(
         "--date",
         type=str,
-        help="Date for syncing Whoop data (in ISO8601 format, e.g. '2025-01-01'). Defaults to today"
+        help="Date for syncing Whoop data (in ISO8601 format, e.g. '2025-01-01'). Defaults to today."
     )
 
     args = parser.parse_args()
