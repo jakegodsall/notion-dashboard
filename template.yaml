@@ -1,19 +1,30 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: >
-  notion-dashboard
-
-  Sample SAM Template for notion-dashboard
-
-Globals:
-  Function:
-    Timeout: 3
-
+Description: Notion Dashboard Stack
+Parameters:
+  NotionApiKey:
+    Type: String
+    Description: "Notion API Key"
+    NoEcho: true
+  WhoopUsername:
+    Type: String
+    Description: "Whoop Username"
+    NoEcho: true
+  WhoopPassword:
+    Type: String
+    Description: "Whoop Password"
+    NoEcho: true
+  LingqApiKey:
+    Type: String
+    Description: "LingQ API Key"
+    NoEcho: true
 Resources:
-  SynchronizationFunction:
+  NotionDashboardSynchronisationLambda:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: .
+      FunctionName: NotionDashboardSynchronisationLambda
+      Description: Synchronisation function for synchronising different services with Notion databases
       Handler: lambda.lambda_handler
       Environment:
         Variables:
@@ -29,31 +40,10 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
       Events:
-        ScheduledEvent:
+        NotionDashboardSynchronisationSchedule:
           Type: Schedule
           Properties:
             Schedule: cron(55 23 * * ? *)
-            Name: NotionDashboardCron
-            Description: "Triggers the Notion Dashboard Synchronisation Lambda function daily at 12:00"
-
-Parameters:
-  NotionApiKey:
-    Type: String
-    Description: "Notion API Key"
-  WhoopUsername:
-    Type: String
-    Description: "Whoop Username"
-  WhoopPassword:
-    Type: String
-    Description: "Whoop Parssword"
-  LingqApiKey:
-    Type: String
-    Description: "LingQ API Key"
-
-Outputs:
-  SynchronizationFunctionArn:
-    Description: "ARN of the Synchronization Function"
-    Value: !GetAtt SynchronizationFunction.Arn
-  SynchronizationFunctionIamRole:
-    Description: "Implicit IAM Role created for the Synchronization Function"
-    Value: !GetAtt SynchronizationFunctionRole.Arn
+            Name: NotionDashboardSyncSchedule
+            Description: Triggers the Lambda function daily at 23:55
+            Enabled: true

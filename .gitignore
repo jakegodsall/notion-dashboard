@@ -8,6 +8,7 @@ samconfig.toml
 
 # Project
 .env
+deploy.sh
 notion.config.yml
 
 # Python
