@@ -3,6 +3,7 @@ from datetime import datetime, time, timezone
 from whoop import WhoopClient
 from src.integrations.whoop.sport_map import sport_map
 
+from src.utils.datetime_utils import get_datetimes_for_date
 
 class WhoopFetcher:
     def __init__(self):
@@ -23,11 +24,38 @@ class WhoopFetcher:
 
     def get_profile(self):
         return self.client.get_profile()
+    
+    def get_sleep(self, date):
+        start, end = get_datetimes_for_date(date)
+        sleep_collection = self.client.get_sleep_collection(start, end)
+        return sleep_collection[0]
+    
+    def get_recovery(self, date):
+        start, end = get_datetimes_for_date(date)
+        recovery_data = self.client.get_recovery_collection(start, end)
+        return recovery_data[0]
+    
+    def get_sleep_and_recovery(self, date):
+        sleep_data = self.get_sleep(date)
+        recovery_data = self.get_recovery(date)
 
-    def get_workouts_for_given_date(self, iso_date):
-        day = datetime.fromisoformat(iso_date)
-        start = datetime.combine(day.date(), time.min, tzinfo=timezone.utc).isoformat()  # 00:00 UTC
-        end = datetime.combine(day.date(), time.max, tzinfo=timezone.utc).isoformat()  # 23:59 UTC
+        print(sleep_data, recovery_data)
+
+        result = {}
+
+        # Sleep data
+        result["Sleep Start Time"] = sleep_data["start"]
+        result["Sleep End Time"] = sleep_data["end"]
+        result["Sleep Performance Percentage"] = sleep_data["score"]["sleep_performance_percentage"]
+        result["Sleep Consistency Percentage"] = sleep_data["score"]["sleep_consistency_percentage"]
+        result["Sleep Efficiency Percentage"] = sleep_data["score"]["sleep_efficiency_percentage"]
+        result["Recovery Score"] = recovery_data["score"]["recovery_score"]
+        result["Resting Heart Rate"] = recovery_data["score"]["resting_heart_rate"]
+
+        return result
+
+    def get_workouts_for_given_date(self, date):
+        start, end = get_datetimes_for_date(date)
         workouts = self.client.get_workout_collection(start, end)
         return workouts
 

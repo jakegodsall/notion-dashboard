@@ -42,15 +42,30 @@ def sync_whoop(date=None):
     """
     date = date or datetime.now().isoformat()
     logger.info("Running Whoop sync...")
-    try:
-        workouts = whoop_service.get_workouts_for_given_date(date)
-        transformed_workouts = whoop_service.transform_workouts(workouts)
-        for workout in transformed_workouts:
-            notion_client.create_page("whoop", workout)
-            logger.info(f"Pushed {workout['sport']} activity to Notion")            
-        logger.info("Whoop sync completed.")
-    except Exception as e:
-        logger.error(f"Error during Whoop sync: {e}")
+    def sync_whoop_workouts(date):
+        try:
+            # Workouts
+            workouts = whoop_service.get_workouts_for_given_date(date)
+            transformed_workouts = whoop_service.transform_workouts(workouts)
+            for workout in transformed_workouts:
+                notion_client.create_page("whoop", workout)
+                logger.info(f"Pushed {workout['sport']} activity to Notion")            
+            logger.info("Whoop workout completed.")
+        except Exception as e:
+            logger.error(f"Error during Whoop workout sync: {e}")
+
+    def sync_whoop_sleep(date):
+        try:
+            sleeps = whoop_service.get_sleep_and_recovery(date)
+            for sleep in sleeps:
+                print("Sleep length", len(sleep))
+        except Exception as e:
+            logger.error(f"Error during Whoop sleep sync: {e}")
+
+    # sync_whoop_workouts(date)
+    sync_whoop_sleep(date)
+    logger.info("Whoop sync completed.")
+    
 
 
 def main():
@@ -77,4 +92,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    sync_whoop()
