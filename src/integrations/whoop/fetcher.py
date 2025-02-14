@@ -39,18 +39,18 @@ class WhoopFetcher:
         sleep_data = self.get_sleep(date)
         recovery_data = self.get_recovery(date)
 
-        print(sleep_data, recovery_data)
-
         result = {}
 
         # Sleep data
-        result["Sleep Start Time"] = sleep_data["start"]
-        result["Sleep End Time"] = sleep_data["end"]
-        result["Sleep Performance Percentage"] = sleep_data["score"]["sleep_performance_percentage"]
-        result["Sleep Consistency Percentage"] = sleep_data["score"]["sleep_consistency_percentage"]
-        result["Sleep Efficiency Percentage"] = sleep_data["score"]["sleep_efficiency_percentage"]
-        result["Recovery Score"] = recovery_data["score"]["recovery_score"]
-        result["Resting Heart Rate"] = recovery_data["score"]["resting_heart_rate"]
+        result["name"] = datetime.now().isoformat()
+        result["date"] = datetime.now().isoformat()
+        result["sleep_start_time"] = sleep_data["start"]
+        result["sleep_end_time"] = sleep_data["end"]
+        result["sleep_performance_percentage"] = sleep_data["score"]["sleep_performance_percentage"]
+        result["sleep_consistency_percentage"] = sleep_data["score"]["sleep_consistency_percentage"]
+        result["sleep_efficiency_percentage"] = sleep_data["score"]["sleep_efficiency_percentage"]
+        result["recovery_score"] = recovery_data["score"]["recovery_score"]
+        result["resting_heart_rate"] = recovery_data["score"]["resting_heart_rate"]
 
         return result
 
