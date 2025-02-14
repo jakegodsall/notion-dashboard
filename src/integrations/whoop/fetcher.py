@@ -42,8 +42,8 @@ class WhoopFetcher:
         result = {}
 
         # Sleep data
-        result["name"] = datetime.now().isoformat()
-        result["date"] = datetime.now().isoformat()
+        result["name"] = date
+        result["date"] = date
         result["sleep_start_time"] = sleep_data["start"]
         result["sleep_end_time"] = sleep_data["end"]
         result["sleep_performance_percentage"] = sleep_data["score"]["sleep_performance_percentage"]

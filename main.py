@@ -35,37 +35,34 @@ def sync_lingq():
     except Exception as e:
         logger.error(f"Error during LingQ sync: {e}")
 
+def sync_whoop_workouts(date=None):
+    logger.info("Runing Whoop workouts sync...")
+    try:
+        if date is None:
+            date = datetime.now().date()
+        else:
+            date = datetime.strptime(date, "%Y-%m-%d").date()
 
-def sync_whoop(date=None):
-    """
-    Sync Whoop data with Notion.
-    """
-    date = date or datetime.now().isoformat()
-    logger.info("Running Whoop sync...")
-    def sync_whoop_workouts(date):
-        try:
-            # Workouts
-            workouts = whoop_service.get_workouts_for_given_date(date)
-            transformed_workouts = whoop_service.transform_workouts(workouts)
-            for workout in transformed_workouts:
-                notion_client.create_page("whoop-exercise", workout)
-                logger.info(f"Pushed {workout['sport']} activity to Notion")            
-            logger.info("Whoop workout completed.")
-        except Exception as e:
-            logger.error(f"Error during Whoop workout sync: {e}")
+        workouts = whoop_service.get_workouts_for_given_date(date)
+        transformed_workouts = whoop_service.transform_workouts(workouts)
+        for workout in transformed_workouts:
+            notion_client.create_page("whoop-exercise", workout)
+            logger.info(f"Pushed {workout['sport']} activity to Notion")            
+    except Exception as e:
+        logger.error(f"Error during Whoop workout sync: {e}")
+    logger.info("Whoop workout sync completed.")
 
-    def sync_whoop_sleep_and_recovery(date):
-        try:
-            sleep_and_recovery = whoop_service.get_sleep_and_recovery(date)
-            notion_client.create_page("whoop-sleep-and-recovery", sleep_and_recovery)
-        except Exception as e:
-            logger.error(f"Error during Whoop sleep sync: {e}")
+def sync_whoop_sleep_and_recovery(date=None):
+    logger.info("Running Whoop sleep and recovery sync...")
+    try:
+        if date is None:
+            date = datetime.now().date().isoformat()
 
-    # sync_whoop_workouts(date)
-    sync_whoop_sleep_and_recovery(date)
-    logger.info("Whoop sync completed.")
-    
-
+        sleep_and_recovery = whoop_service.get_sleep_and_recovery(date)
+        notion_client.create_page("whoop-sleep-and-recovery", sleep_and_recovery)
+    except Exception as e:
+        logger.error(f"Error during Whoop sleep and recovery sync: {e}")
+    logger.info("Whoop sleep and recovery sync completed.")
 
 def main():
     parser = argparse.ArgumentParser(
@@ -75,8 +72,15 @@ def main():
 
     lingq_parser = subparsers.add_parser("sync-lingq", help="Sync current known word counts with Notion.")
     
-    whoop_parser = subparsers.add_parser("sync-whoop", help="Sync Whoop activity with Notion.")
-    whoop_parser.add_argument(
+    whoop_workout_parser = subparsers.add_parser("sync-whoop-workouts", help="Sync Whoop workout activity with Notion.")
+    whoop_workout_parser.add_argument(
+        "--date",
+        type=str,
+        help="Date for syncing Whoop data (in ISO8601 format, e.g. '2025-01-01'). Defaults to today."
+    )
+
+    whoop_recovery_parser = subparsers.add_parser("sync-whoop-sleep", help="Sync Whoop sleep and recovery data with Notion.")
+    whoop_recovery_parser.add_argument(
         "--date",
         type=str,
         help="Date for syncing Whoop data (in ISO8601 format, e.g. '2025-01-01'). Defaults to today."
@@ -86,10 +90,11 @@ def main():
 
     if args.command == 'sync-lingq':
         sync_lingq()
-    if args.command == 'sync-whoop':
-        sync_whoop(date=args.date)
+    if args.command == 'sync-whoop-workouts':
+        sync_whoop_workouts(date=args.date)
+    if args.command == 'sync-whoop-sleep':
+        sync_whoop_sleep_and_recovery(date=args.date)
 
 
 if __name__ == "__main__":
-    # main()
-    sync_whoop()
+    main()
