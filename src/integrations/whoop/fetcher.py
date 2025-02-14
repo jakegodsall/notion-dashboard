@@ -1,9 +1,14 @@
 import os
+import logging
 from datetime import datetime, time, timezone
 from whoop import WhoopClient
 from src.integrations.whoop.sport_map import sport_map
 
 from src.utils.datetime_utils import get_datetimes_for_date
+
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
+logger = logging.getLogger(__name__)
 
 class WhoopFetcher:
     def __init__(self):
@@ -36,23 +41,43 @@ class WhoopFetcher:
         return recovery_data[0]
     
     def get_sleep_and_recovery(self, date):
-        sleep_data = self.get_sleep(date)
-        recovery_data = self.get_recovery(date)
+        try:
+            sleep_data = self.get_sleep(date)
+            recovery_data = self.get_recovery(date)
 
-        result = {}
+            result = {}
 
-        # Sleep data
-        result["name"] = date
-        result["date"] = date
-        result["sleep_start_time"] = sleep_data["start"]
-        result["sleep_end_time"] = sleep_data["end"]
-        result["sleep_performance_percentage"] = sleep_data["score"]["sleep_performance_percentage"]
-        result["sleep_consistency_percentage"] = sleep_data["score"]["sleep_consistency_percentage"]
-        result["sleep_efficiency_percentage"] = sleep_data["score"]["sleep_efficiency_percentage"]
-        result["recovery_score"] = recovery_data["score"]["recovery_score"]
-        result["resting_heart_rate"] = recovery_data["score"]["resting_heart_rate"]
+            try:
+                result["name"] = date
+                result["date"] = date
+                result["sleep_start_time"] = sleep_data["start"]
+                result["sleep_end_time"] = sleep_data["end"]
+                
+                if sleep_data.get("score_state") == "SCORED":
+                    result["sleep_performance_percentage"] = sleep_data["score"]["sleep_performance_percentage"]
+                    result["sleep_consistency_percentage"] = sleep_data["score"]["sleep_consistency_percentage"]
+                    result["sleep_efficiency_percentage"] = sleep_data["score"]["sleep_efficiency_percentage"]
+                else:
+                    result["sleep_performance_percentage"] = None
+                    result["sleep_consistency_percentage"] = None
+                    result["sleep_efficiency_percentage"] = None
+            except KeyError as e:
+                logger.error(f"Missing key in sleep data for date {date}: {e}")
+                raise ValueError(f"Incomplete sleep data for date {date}")
 
-        return result
+            try:
+                result["recovery_score"] = recovery_data["score"]["recovery_score"]
+                result["resting_heart_rate"] = recovery_data["score"]["resting_heart_rate"]
+            except KeyError as e:
+                logger.error(f"Missing key in recovery data for date {date}: {e}")
+                raise ValueError(f"Incomplete recovery data for date {date}")
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Error in get_sleep_and_recovery for date {date}: {e}")
+            return None
+
 
     def get_workouts_for_given_date(self, date):
         start, end = get_datetimes_for_date(date)

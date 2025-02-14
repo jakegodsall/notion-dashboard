@@ -47,22 +47,38 @@ def sync_whoop_workouts(date=None):
         transformed_workouts = whoop_service.transform_workouts(workouts)
         for workout in transformed_workouts:
             notion_client.create_page("whoop-exercise", workout)
-            logger.info(f"Pushed {workout['sport']} activity to Notion")            
+            logger.info(f"Pushed {workout['sport']} dactivity to Notion")            
     except Exception as e:
         logger.error(f"Error during Whoop workout sync: {e}")
     logger.info("Whoop workout sync completed.")
 
-def sync_whoop_sleep_and_recovery(date=None):
+from datetime import timedelta
+
+def sync_whoop_sleep_and_recovery(date=None, loop_until_first=False):
     logger.info("Running Whoop sleep and recovery sync...")
     try:
         if date is None:
             date = datetime.now().date().isoformat()
 
-        sleep_and_recovery = whoop_service.get_sleep_and_recovery(date)
-        notion_client.create_page("whoop-sleep-and-recovery", sleep_and_recovery)
+        while True:
+            logger.info(f"Processing data for date: {date}")
+
+            sleep_and_recovery = whoop_service.get_sleep_and_recovery(date)
+            print(sleep_and_recovery)
+            if sleep_and_recovery:
+                notion_client.create_page("whoop-sleep-and-recovery", sleep_and_recovery)
+                logger.info(f"Data for {date} synced successfully.")
+
+            if not loop_until_first or not sleep_and_recovery:
+                break
+
+            date_obj = datetime.fromisoformat(date).date()
+            date_obj -= timedelta(days=1)
+            date = date_obj.isoformat()
+
+        logger.info("Whoop sleep and recovery sync completed.")
     except Exception as e:
         logger.error(f"Error during Whoop sleep and recovery sync: {e}")
-    logger.info("Whoop sleep and recovery sync completed.")
 
 def main():
     parser = argparse.ArgumentParser(
@@ -85,6 +101,11 @@ def main():
         type=str,
         help="Date for syncing Whoop data (in ISO8601 format, e.g. '2025-01-01'). Defaults to today."
     )
+    whoop_recovery_parser.add_argument(
+        "--loop-until-first",
+        action="store_true",
+        help="Loop through days, syncing data until the first day of available data is reached."
+    )
 
     args = parser.parse_args()
 
@@ -93,8 +114,7 @@ def main():
     if args.command == 'sync-whoop-workouts':
         sync_whoop_workouts(date=args.date)
     if args.command == 'sync-whoop-sleep':
-        sync_whoop_sleep_and_recovery(date=args.date)
-
+        sync_whoop_sleep_and_recovery(date=args.date, loop_until_first=args.loop_until_first)
 
 if __name__ == "__main__":
     main()
