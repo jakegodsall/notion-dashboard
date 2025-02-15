@@ -51,14 +51,19 @@ def mode_handler(mode):
             raise RuntimeError("Provided mode does not match a defined mode.")
 
 def lambda_handler(event, context):
-    mode = os.getenv('MODE')
+    mode = os.getenv('MODE').lower()
     if mode is None:
-        raise RuntimeError('Environment variable MODE is None.')
+        logger.error("Envrionment variable MODE is None.")
+        return {"status": "error", "message": "Environment variable MODE is None."}
     
-    logger.info("Starting the synchronization tasks...")
-    logger.info(f"Mode: {mode}")
+    logger.info(f"Starting the synchronization tasks in mode: {mode}")
+    try:
+        mode_handler(mode)
+    except RuntimeError as e:
+        logger.error(f"Mode error: {e}")
+        return {"status": "error", "message": str(e)}
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        return {"status": "error", "message": f"Unexpected error occurred: {str(e)}"}
 
-    mode_handler(mode)
-
-    logger.info(f" All tasks completed.")
     return {"status": "success"}
