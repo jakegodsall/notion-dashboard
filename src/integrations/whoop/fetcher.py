@@ -5,10 +5,10 @@ from whoop import WhoopClient
 from src.integrations.whoop.sport_map import sport_map
 
 from src.utils.datetime_utils import get_datetimes_for_date
+from src.utils.logger import get_logger
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 class WhoopFetcher:
     def __init__(self):
@@ -40,6 +40,8 @@ class WhoopFetcher:
         recovery_data = self.client.get_recovery_collection(start, end)
         return recovery_data[0]
     
+    from datetime import datetime, timedelta
+
     def get_sleep_and_recovery(self, date):
         try:
             sleep_data = self.get_sleep(date)
@@ -47,12 +49,21 @@ class WhoopFetcher:
 
             result = {}
 
+            logger.info(sleep_data)
+
             try:
-                result["name"] = date
-                result["date"] = date
+                # Parse sleep end time to adjust the date
+                sleep_end_time = sleep_data["end"]
+                sleep_end_datetime = datetime.fromisoformat(sleep_end_time)
+
+                # Calculate the "effective date" based on sleep end time
+                effective_date = sleep_end_datetime.date()
+
+                result["name"] = effective_date.isoformat()
+                result["date"] = effective_date.isoformat()
                 result["sleep_start_time"] = sleep_data["start"]
-                result["sleep_end_time"] = sleep_data["end"]
-                
+                result["sleep_end_time"] = sleep_end_time
+
                 if sleep_data.get("score_state") == "SCORED":
                     result["sleep_performance_percentage"] = sleep_data["score"]["sleep_performance_percentage"]
                     result["sleep_consistency_percentage"] = sleep_data["score"]["sleep_consistency_percentage"]
@@ -77,7 +88,6 @@ class WhoopFetcher:
         except Exception as e:
             logger.error(f"Error in get_sleep_and_recovery for date {date}: {e}")
             return None
-
 
     def get_workouts_for_given_date(self, date):
         start, end = get_datetimes_for_date(date)

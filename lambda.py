@@ -6,10 +6,9 @@ from src.integrations.lingq.fetcher import LingQFetcher
 from src.integrations.whoop.fetcher import WhoopFetcher
 from src.services.notion import NotionClient
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s: %(message)s')
-logger = logging.getLogger(__name__)
+from src.utils.logger import get_logger
 
+logger = get_logger()
 
 # Configuration
 notion_config_path = Path(__file__).resolve().parent / "src" / "config" / "notion.config.yml"
