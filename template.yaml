@@ -28,7 +28,6 @@ Resources:
       Handler: lambda.lambda_handler
       Environment:
         Variables:
-          LINGQ_API_KEY: !Ref LingqApiKey
           WHOOP_USERNAME: !Ref WhoopUsername
           WHOOP_PASSWORD: !Ref WhoopPassword
           NOTION_API_KEY: !Ref NotionApiKey
@@ -47,3 +46,4 @@ Resources:
             Name: NotionDashboardSyncSchedule
             Description: Triggers the Lambda function daily at 23:55
             Enabled: true
+  
