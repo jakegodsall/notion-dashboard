@@ -49,8 +49,6 @@ class WhoopFetcher:
 
             result = {}
 
-            logger.info(sleep_data)
-
             try:
                 # Parse sleep end time to adjust the date
                 sleep_end_time = sleep_data["end"]

@@ -4,11 +4,14 @@ from datetime import datetime
 from pathlib import Path
 from src.integrations.lingq.fetcher import LingQFetcher
 from src.integrations.whoop.fetcher import WhoopFetcher
+from src.utils.logger import get_logger
 from src.services.notion import NotionClient
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+
+logger = get_logger()
 
 # Configuration
 notion_config_path = Path(__file__).resolve().parent / "src" / "config" / "notion.config.yml"
@@ -18,9 +21,6 @@ lingq_service = LingQFetcher()
 whoop_service = WhoopFetcher()
 notion_client = NotionClient(str(notion_config_path))
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
-logger = logging.getLogger(__name__)
 
 def sync_lingq():
     """
