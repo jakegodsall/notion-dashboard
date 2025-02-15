@@ -2,9 +2,6 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Notion Dashboard Stack
 Parameters:
-  Mode:
-    Type: String
-    Description: Mode of operation for the Lambda handler
   NotionApiKey:
     Type: String
     Description: Notion API Key
@@ -48,7 +45,7 @@ Resources:
           Type: Schedule
           Properties:
             Schedule: cron(55 23 * * ? *)
-            Name: NotionDashboardSyncSchedule
+            Name: WhoopWorkoutSyncSchedule
             Description: Triggers the Lambda function daily at 23:55
             Enabled: true
   WhoopSleepAndRecovery:
@@ -79,4 +76,4 @@ Resources:
             Schedule: cron(0 10 * * ? *)
             Name: WhoopSleepAndRecoverySchedule
             Description: Triggers the Lambda function daily at 10:00
-            Enabled: false
+            Enabled: true

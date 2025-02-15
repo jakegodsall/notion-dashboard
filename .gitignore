@@ -11,6 +11,7 @@ samconfig.toml
 deploy.sh
 notion.config.yml
 local.sh
+deploy/
 
 # Python
 __pycache__/
