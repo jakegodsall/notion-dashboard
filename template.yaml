@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Notion Dashboard Stack
 Parameters:
@@ -27,7 +27,8 @@ Resources:
     Properties:
       CodeUri: .
       FunctionName: WhoopWorkoutSyncLambda
-      Description: Synchronisation function for synchronising Whoop workout data on a daily cron.
+      Description: Synchronisation function for synchronising Whoop workout data on a
+        daily cron.
       Handler: lambda.lambda_handler
       Environment:
         Variables:
@@ -55,7 +56,8 @@ Resources:
     Properties:
       CodeUri: .
       FunctionName: WhoopSleepAndRecoveryLambda
-      Description: Synchronisation function for synchronising Whoop sleep and recovery data on a daily cron.
+      Description: Synchronisation function for synchronising Whoop sleep and recovery
+        data on a daily cron.
       Handler: lambda.lambda_handler
       Environment:
         Variables:
