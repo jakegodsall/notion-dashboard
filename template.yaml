@@ -2,32 +2,36 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: Notion Dashboard Stack
 Parameters:
+  Mode:
+    Type: String
+    Description: Mode of operation for the Lambda handler
   NotionApiKey:
     Type: String
-    Description: "Notion API Key"
+    Description: Notion API Key
     NoEcho: true
   WhoopUsername:
     Type: String
-    Description: "Whoop Username"
+    Description: Whoop Username
     NoEcho: true
   WhoopPassword:
     Type: String
-    Description: "Whoop Password"
+    Description: Whoop Password
     NoEcho: true
   LingqApiKey:
     Type: String
-    Description: "LingQ API Key"
+    Description: LingQ API Key
     NoEcho: true
 Resources:
-  NotionDashboardSynchronisationLambda:
+  WhoopWorkoutSync:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: .
-      FunctionName: NotionDashboardSynchronisationLambda
-      Description: Synchronisation function for synchronising different services with Notion databases
+      FunctionName: WhoopWorkoutSyncLambda
+      Description: Synchronisation function for synchronising Whoop workout data on a daily cron.
       Handler: lambda.lambda_handler
       Environment:
         Variables:
+          MODE: whoop-workout
           WHOOP_USERNAME: !Ref WhoopUsername
           WHOOP_PASSWORD: !Ref WhoopPassword
           NOTION_API_KEY: !Ref NotionApiKey
@@ -39,11 +43,38 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
       Events:
-        NotionDashboardSynchronisationSchedule:
+        WhoopWorkoutSyncSchedule:
           Type: Schedule
           Properties:
             Schedule: cron(55 23 * * ? *)
             Name: NotionDashboardSyncSchedule
             Description: Triggers the Lambda function daily at 23:55
             Enabled: true
-  
+  WhoopSleepAndRecovery:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      FunctionName: WhoopSleepAndRecoveryLambda
+      Description: Synchronisation function for synchronising Whoop sleep and recovery data on a daily cron.
+      Handler: lambda.lambda_handler
+      Environment:
+        Variables:
+          MODE: whoop-sleep-and-recovery
+          WHOOP_USERNAME: !Ref WhoopUsername
+          WHOOP_PASSWORD: !Ref WhoopPassword
+          NOTION_API_KEY: !Ref NotionApiKey
+      Runtime: python3.13
+      MemorySize: 256
+      Timeout: 10
+      Architectures:
+        - x86_64
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        WhoopSleepAndRecoverySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 10 * * ? *)
+            Name: WhoopSleepAndRecoverySchedule
+            Description: Triggers the Lambda function daily at 10:00
+            Enabled: false
