@@ -1,6 +1,6 @@
 import argparse
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from src.integrations.lingq.fetcher import LingQFetcher
 from src.integrations.whoop.fetcher import WhoopFetcher
@@ -45,14 +45,12 @@ def sync_whoop_workouts(date=None):
 
         workouts = whoop_service.get_workouts_for_given_date(date)
         transformed_workouts = whoop_service.transform_workouts(workouts)
-        for workout in transformed_workouts:
-            notion_client.create_page("whoop-workout", workout)
-            logger.info(f"Pushed {workout['sport']} dactivity to Notion")            
+
+        sync_result = notion_client.sync_data("whoop-workout", transformed_workouts)
+        logger.info(f"Whoop workout sync result: {sync_result}")
     except Exception as e:
         logger.error(f"Error during Whoop workout sync: {e}")
     logger.info("Whoop workout sync completed.")
-
-from datetime import timedelta
 
 def sync_whoop_sleep_and_recovery(date=None, loop_until_first=False):
     logger.info("Running Whoop sleep and recovery sync...")
