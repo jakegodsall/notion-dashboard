@@ -62,7 +62,7 @@ def sync_whoop_sleep_and_recovery(date=None, loop_until_first=False):
             logger.info(f"Processing data for date: {date}")
 
             sleep_and_recovery = whoop_service.get_sleep_and_recovery(date)
-            print(sleep_and_recovery)
+            logger.info(sleep_and_recovery)
             if sleep_and_recovery:
                 notion_client.create_page("whoop-sleep-and-recovery", sleep_and_recovery)
                 logger.info(f"Data for {date} synced successfully.")

@@ -39,4 +39,4 @@ class LingQFetcher:
 if __name__ == '__main__':
     fetcher = LingQFetcher()
     languages = fetcher.get_daily_word_counts()
-    print(languages)
+    logger.info(languages)

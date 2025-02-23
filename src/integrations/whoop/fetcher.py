@@ -127,9 +127,9 @@ def main():
     whoop_client = WhoopFetcher()
 
     todays_workouts = whoop_client.get_workouts_for_given_date(datetime.now().isoformat())
-    print(todays_workouts)
+    logger.info(todays_workouts)
     todays_workouts_transformed = whoop_client.transform_workouts(todays_workouts)
-    print(todays_workouts_transformed)
+    logger.info(todays_workouts_transformed)
 
 
 if __name__ == '__main__':

@@ -3,6 +3,10 @@ import yaml
 import hashlib
 from notion_client import Client
 
+from src.utils.logger import get_logger
+
+logger = get_logger()
+
 class NotionClient:
     def __init__(self, config_path: str):
         api_key = os.environ.get("NOTION_API_KEY")
@@ -13,9 +17,15 @@ class NotionClient:
             self.config = yaml.safe_load(file).get("notion")
 
     def get_database_config(self, integration_name: str):
+        """
+        Get the database configuration from the config file.
+        """
         integrations = self.config.get("integrations")
         if integration_name not in integrations:
-            raise ValueError(f"No configuration found for integration {integration_name}")
+            err_msg = f"No configuration found for integration {integration_name}"
+            logger.error(err_msg)
+            raise ValueError(err_msg)
+        logger.info("Notion database config loaded.")
         return integrations[integration_name]
     
     def generate_hash(self, data):
@@ -23,7 +33,9 @@ class NotionClient:
         Generate a SHA256 hash based on key attributes.
         """
         unique_string = '-'.join(str(value) for value in data.values())
-        return hashlib.sha256(unique_string.encode()).hexdigest()
+        hash = hashlib.sha256(unique_string.encode()).hexdigest()
+        logger.info(f"Notion record hashed: {hash}")
+        return hash
     
     def get_existing_records(self, integration_name, date_str):
         """
@@ -107,12 +119,18 @@ class NotionClient:
                         "title": [{"type": "text", "text": {"content": data[config["key"]]}}]
                     }
                 else:
-                    raise ValueError(f"Unsupported field type: {field_type}")
+                    err_msg = f"Unsupported field type: {field_type}"
+                    logger.error(err_msg)
+                    raise ValueError(err_msg)
 
             except KeyError as e:
-                raise ValueError(f"Error processing field '{field}': {e}") from e
+                err_msg = f"Error processing field '{field}': {e}"
+                logger.error(err_msg)
+                raise ValueError(err_msg) from e
             except Exception as e:
-                raise ValueError(f"Unexpected error processing field '{field}': {e}") from e
+                err_msg = f"Unexpected error processing field '{field}': {e}"
+                logger.error(err_msg)
+                raise ValueError(err_msg) from e
 
         return properties
 
@@ -123,10 +141,12 @@ class NotionClient:
         field_mappings = integration_config["field_mappings"]
         properties = self.build_properties(field_mappings, data, custom_id)
 
-        return self.client.pages.create(
+        resp = self.client.pages.create(
             parent={"database_id": database_id},
             properties=properties
         )
+        logger.info(f"Page created in the database: {database_id}")
+        return resp
     
     def update_page(self, page_id, integration_name, data: dict):
         """Update an existing Notion record if data has changed."""
@@ -147,6 +167,7 @@ class NotionClient:
         - Compares against existing records to determine updates, inserts, or skips.
         """
         if not fetched_data:
+            logger.info('No data to sync.')
             return {"status": "skipped", "message": "No data to sync."}
 
         date_str = fetched_data[0].get("date")
@@ -159,7 +180,7 @@ class NotionClient:
 
             if custom_id in existing_records:
                 existing_record = existing_records[custom_id]
-                if existing_record["properties"] != item:  # Compare data
+                if existing_record["properties"] != item:
                     self.update_page(existing_record["id"], integration_name, item)
                     updates += 1
                 else:
@@ -171,4 +192,4 @@ class NotionClient:
         return {"status": "success", "updates": updates, "inserts": inserts, "skips": skips}
 
 if __name__ == "__main__":
-    print("Notion Client")
+    logger.info("Notion Client")
