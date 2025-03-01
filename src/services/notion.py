@@ -9,13 +9,31 @@ logger = get_logger()
 
 class NotionClient:
     def __init__(self, config_path: str):
-        api_key = os.environ.get("NOTION_API_KEY")
-        if not api_key:
-            raise ValueError("Notion API key not valid:", api_key)
-        self.client = Client(auth=api_key)
-        with open(config_path, 'r') as file:
-            self.config = yaml.safe_load(file).get("notion")
+        self._config_path = config_path
 
+    @property
+    def api_key(self) -> str:
+        """Retrieve the Notion API key from environment variables."""
+        key = os.environ.get("NOTION_API_KEY")
+        if not key:
+            raise ValueError("Notion API key not valid:", key)
+        return key
+    
+    @property
+    def client(self) -> Client:
+        """Lazy-load the Notion client with authentication."""
+        if not hasattr(self, "_client"):
+            self._client = Client(auth=self.api_key)
+        return self._client
+    
+    @property
+    def config(self) -> dict:
+        """Load the Notion configuration from the YAML file."""
+        if not hasattr(self, "_config"):
+            with open(self._config_path, 'r') as file:
+                self._config = yaml.safe_load(file).get("notion", {})
+        return self._config
+        
     def get_database_config(self, integration_name: str):
         """
         Get the database configuration from the config file.
