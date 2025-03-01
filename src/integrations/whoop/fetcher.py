@@ -90,6 +90,7 @@ class WhoopFetcher:
     def get_workouts_for_given_date(self, date):
         start, end = get_datetimes_for_date(date)
         workouts = self.client.get_workout_collection(start, end)
+        logger.info("WORKOUTS: ", workouts)
         return workouts
 
     def transform_workouts(self, workouts):
@@ -108,6 +109,7 @@ class WhoopFetcher:
 
             # Transform data
             transformed_entry = {
+                "id": entry["id"],
                 "title": sport_type,
                 "date": start_time.isoformat(),
                 "duration": duration,

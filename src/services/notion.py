@@ -1,6 +1,6 @@
 import os
 import yaml
-import hashlib
+import datetime
 from notion_client import Client
 
 from src.utils.logger import get_logger
@@ -43,7 +43,7 @@ class NotionClient:
         existing_records = response.get("results", [])
         return {record["properties"]["Custom ID"]["rich_text"][0]["text"]["content"]: record 
                     for record in existing_records if "Custom ID" in record["properties"]}
-    
+        
     def get_related_id(self, related_database_id, key, value):
         response = self.client.databases.query(
             database_id=related_database_id,
@@ -149,6 +149,31 @@ class NotionClient:
             page_id=page_id,
             properties=properties
         )
+    
+    def update_or_create(self, integration_name, date_str, data, compare_column):
+        """
+        Check if a record exists for the given day based on the comparison column.
+        If found, udpate the existing record, otherwise, create a new record.
+        """
+        integration_config = self.get_database_config(integration_name)
+        comparison_field = integration_config.get("comparison_column", "Custom ID")
+
+        existing_records = self.get_existing_records(integration_name, date_str, compare_column)
+        comparison_value = data.get(comparison_field)
+
+        if not comparison_value:
+            logger.error(f"Missing required comparison field '{comparison_field}' in data.")
+            raise ValueError(f"Missing required comparison field '{comparison_field}' in data.")
+
+        if comparison_value in existing_records:
+            # Update existing record
+            page_id = existing_records[comparison_value]["id"]
+            logger.info(f"Updating existing Notion record for {comparison_value}")
+            return self.update_page(page_id, integration_name, data)
+        else:
+            # Create a new record
+            logger.info(f"Creating new Notion record for {comparison_value}")
+            return self.create_page(integration_name, data)
 
 if __name__ == "__main__":
     logger.info("Notion Client")
