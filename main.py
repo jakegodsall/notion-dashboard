@@ -36,7 +36,7 @@ def sync_lingq():
         logger.error(f"Error during LingQ sync: {e}")
 
 def sync_whoop_workouts(date=None):
-    logger.info("Runing Whoop workouts sync...")
+    logger.info("Running Whoop workouts sync...")
     try:
         if date is None:
             date = datetime.now().date()
@@ -45,9 +45,11 @@ def sync_whoop_workouts(date=None):
 
         workouts = whoop_service.get_workouts_for_given_date(date)
         transformed_workouts = whoop_service.transform_workouts(workouts)
+        for workout in transformed_workouts:
+            notion_client.create_page("whoop-workout", workout)
+            logger.info(f"Pushed {workout['sport']} dactivity to Notion")            
 
-        sync_result = notion_client.sync_data("whoop-workout", transformed_workouts)
-        logger.info(f"Whoop workout sync result: {sync_result}")
+
     except Exception as e:
         logger.error(f"Error during Whoop workout sync: {e}")
     logger.info("Whoop workout sync completed.")
@@ -84,7 +86,8 @@ def main():
     )
     subparsers = parser.add_subparsers(dest="command", required=True, help="Available commands")
 
-    lingq_parser = subparsers.add_parser("sync-lingq", help="Sync current known word counts with Notion.")
+    # TO IMPLEMENT (MAYBE)
+    # lingq_parser = subparsers.add_parser("sync-lingq", help="Sync current known word counts with Notion.")
     
     whoop_workout_parser = subparsers.add_parser("sync-whoop-workouts", help="Sync Whoop workout activity with Notion.")
     whoop_workout_parser.add_argument(

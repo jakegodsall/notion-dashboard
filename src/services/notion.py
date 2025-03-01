@@ -28,15 +28,6 @@ class NotionClient:
         logger.info("Notion database config loaded.")
         return integrations[integration_name]
     
-    def generate_hash(self, data):
-        """
-        Generate a SHA256 hash based on key attributes.
-        """
-        unique_string = '-'.join(str(value) for value in data.values())
-        hash = hashlib.sha256(unique_string.encode()).hexdigest()
-        logger.info(f"Notion record hashed: {hash}")
-        return hash
-    
     def get_existing_records(self, integration_name, date_str):
         """
         Fetch existing Notion records for a given date and return a {hash: record} mapping
@@ -134,12 +125,12 @@ class NotionClient:
 
         return properties
 
-    def create_page(self, integration_name: str, data: dict, custom_id: str):
+    def create_page(self, integration_name: str, data: dict):
         """Create a new page in Notion with a custom ID."""
         integration_config = self.get_database_config(integration_name)
         database_id = integration_config["database_id"]
         field_mappings = integration_config["field_mappings"]
-        properties = self.build_properties(field_mappings, data, custom_id)
+        properties = self.build_properties(field_mappings, data)
 
         resp = self.client.pages.create(
             parent={"database_id": database_id},
@@ -158,38 +149,6 @@ class NotionClient:
             page_id=page_id,
             properties=properties
         )
-
-    def sync_data(self, integration_name: str, fetched_data: list):
-        """
-        Handles the full sync process:
-        - Fetches existing records from Notion.
-        - Generates a unique hash for each new item.
-        - Compares against existing records to determine updates, inserts, or skips.
-        """
-        if not fetched_data:
-            logger.info('No data to sync.')
-            return {"status": "skipped", "message": "No data to sync."}
-
-        date_str = fetched_data[0].get("date")
-        existing_records = self.get_existing_records(integration_name, date_str)
-
-        updates, inserts, skips = 0, 0, 0
-
-        for item in fetched_data:
-            custom_id = self.generate_hash(item)
-
-            if custom_id in existing_records:
-                existing_record = existing_records[custom_id]
-                if existing_record["properties"] != item:
-                    self.update_page(existing_record["id"], integration_name, item)
-                    updates += 1
-                else:
-                    skips += 1
-            else:
-                self.create_page(integration_name, item, custom_id)
-                inserts += 1
-
-        return {"status": "success", "updates": updates, "inserts": inserts, "skips": skips}
 
 if __name__ == "__main__":
     logger.info("Notion Client")
