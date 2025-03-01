@@ -8,8 +8,9 @@ from src.utils.logger import get_logger
 logger = get_logger()
 
 class NotionClient:
-    def __init__(self, config_path: str):
+    def __init__(self, config_path: str, integration_name: str):
         self._config_path = config_path
+        self.integration_name = integration_name
 
     @property
     def api_key(self) -> str:
@@ -28,41 +29,24 @@ class NotionClient:
     
     @property
     def config(self) -> dict:
-        """Load the Notion configuration from the YAML file."""
+        """Load the Notion configuration from the YAML file for the given integration."""
         if not hasattr(self, "_config"):
             with open(self._config_path, 'r') as file:
-                self._config = yaml.safe_load(file).get("notion", {})
+                config = yaml.safe_load(file).get("notion", {})
+                integrations = config.get('integrations', {})
+
+                if self.integration_name not in integrations:
+                    err_msg = f"No configuration found for integration {self.integration_name}"
+                    logger.error(err_msg)
+                    raise ValueError(err_msg)
+                
+                logger.info("Notion database config loaded.")
+                self._config = integrations[self.integration_name]
+                
         return self._config
         
-    def get_database_config(self, integration_name: str):
-        """
-        Get the database configuration from the config file.
-        """
-        integrations = self.config.get("integrations")
-        if integration_name not in integrations:
-            err_msg = f"No configuration found for integration {integration_name}"
-            logger.error(err_msg)
-            raise ValueError(err_msg)
-        logger.info("Notion database config loaded.")
-        return integrations[integration_name]
-    
-    def get_existing_records(self, integration_name, date_str):
-        """
-        Fetch existing Notion records for a given date and return a {hash: record} mapping
-        """
-        integration_config = self.get_database_config(integration_name)
-        database_id = integration_config['database_id']
-
-        response = self.client.databases.query(
-            database_id=database_id,
-            filter={"property": "Date", "date": {"equals": date_str}}
-        )
-
-        existing_records = response.get("results", [])
-        return {record["properties"]["Custom ID"]["rich_text"][0]["text"]["content"]: record 
-                    for record in existing_records if "Custom ID" in record["properties"]}
-        
     def get_related_id(self, related_database_id, key, value):
+        """Get the id for the related page in a related database."""
         response = self.client.databases.query(
             database_id=related_database_id,
             filter={
@@ -143,11 +127,11 @@ class NotionClient:
 
         return properties
 
-    def create_page(self, integration_name: str, data: dict):
+    def create_page(self, data: dict):
         """Create a new page in Notion with a custom ID."""
-        integration_config = self.get_database_config(integration_name)
-        database_id = integration_config["database_id"]
-        field_mappings = integration_config["field_mappings"]
+        logger.info(self.config)
+        database_id = self.config["database_id"]
+        field_mappings = self.config["field_mappings"]
         properties = self.build_properties(field_mappings, data)
 
         resp = self.client.pages.create(
@@ -157,41 +141,5 @@ class NotionClient:
         logger.info(f"Page created in the database: {database_id}")
         return resp
     
-    def update_page(self, page_id, integration_name, data: dict):
-        """Update an existing Notion record if data has changed."""
-        integration_config = self.get_database_config(integration_name)
-        field_mappings = integration_config["field_mappings"]
-        properties = self.build_properties(field_mappings, data)
-
-        return self.client.pages.update(
-            page_id=page_id,
-            properties=properties
-        )
-    
-    def update_or_create(self, integration_name, date_str, data, compare_column):
-        """
-        Check if a record exists for the given day based on the comparison column.
-        If found, udpate the existing record, otherwise, create a new record.
-        """
-        integration_config = self.get_database_config(integration_name)
-        comparison_field = integration_config.get("comparison_column", "Custom ID")
-
-        existing_records = self.get_existing_records(integration_name, date_str, compare_column)
-        comparison_value = data.get(comparison_field)
-
-        if not comparison_value:
-            logger.error(f"Missing required comparison field '{comparison_field}' in data.")
-            raise ValueError(f"Missing required comparison field '{comparison_field}' in data.")
-
-        if comparison_value in existing_records:
-            # Update existing record
-            page_id = existing_records[comparison_value]["id"]
-            logger.info(f"Updating existing Notion record for {comparison_value}")
-            return self.update_page(page_id, integration_name, data)
-        else:
-            # Create a new record
-            logger.info(f"Creating new Notion record for {comparison_value}")
-            return self.create_page(integration_name, data)
-
 if __name__ == "__main__":
     logger.info("Notion Client")

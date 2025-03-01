@@ -19,13 +19,13 @@ notion_config_path = Path(__file__).resolve().parent / "src" / "config" / "notio
 # Initialize services
 lingq_service = LingQFetcher()
 whoop_service = WhoopFetcher()
-notion_client = NotionClient(str(notion_config_path))
 
 
 def sync_lingq():
     """
     Sync LingQ data with Notion.
     """
+    notion_client = NotionClient(str(notion_config_path), "lingq")
     logger.info("Running LingQ sync...")
     try:
         word_counts = lingq_service.get_daily_word_counts()
@@ -36,6 +36,7 @@ def sync_lingq():
         logger.error(f"Error during LingQ sync: {e}")
 
 def sync_whoop_workouts(date=None):
+    notion_client = NotionClient(str(notion_config_path), "whoop-workout")
     logger.info("Running Whoop workouts sync...")
     try:
         if date is None:
@@ -46,7 +47,7 @@ def sync_whoop_workouts(date=None):
         workouts = whoop_service.get_workouts_for_given_date(date)
         transformed_workouts = whoop_service.transform_workouts(workouts)
         for workout in transformed_workouts:
-            notion_client.create_page("whoop-workout", workout)
+            notion_client.create_page(workout)
             logger.info(f"Pushed {workout['sport']} dactivity to Notion")            
 
 
@@ -55,6 +56,7 @@ def sync_whoop_workouts(date=None):
     logger.info("Whoop workout sync completed.")
 
 def sync_whoop_sleep_and_recovery(date=None, loop_until_first=False):
+    notion_client = NotionClient(str(notion_config_path), "whoop-sleep-and-recovery")
     logger.info("Running Whoop sleep and recovery sync...")
     try:
         if date is None:
