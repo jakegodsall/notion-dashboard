@@ -42,25 +42,8 @@ class NotionClient:
                 
                 logger.info("Notion database config loaded.")
                 self._config = integrations[self.integration_name]
-                
-        return self._config
-        
-    def get_related_id(self, related_database_id, key, value):
-        """Get the id for the related page in a related database."""
-        response = self.client.databases.query(
-            database_id=related_database_id,
-            filter={
-                "property": key,
-                "rich_text": {
-                    "equals": value
-                }
-            }
-        )
-        results = response.get("results", [])
 
-        if results:
-            return results[0]["id"]
-        return None
+        return self._config
 
     def build_properties(self, field_mappings, data: dict):
         """
@@ -126,10 +109,30 @@ class NotionClient:
                 raise ValueError(err_msg) from e
 
         return properties
+    
+    def get_related_id(self, related_database_id, key, value):
+        """Get the id for the related page in a related database."""
+        response = self.client.databases.query(
+            database_id=related_database_id,
+            filter={
+                "property": key,
+                "rich_text": {
+                    "equals": value
+                }
+            }
+        )
+        results = response.get("results", [])
+
+        if results:
+            return results[0]["id"]
+        return None
+    
+    def get_pages(self, isodate: str):
+        """Get pages from the Notion database for the given day."""
+        self.client.pages.
 
     def create_page(self, data: dict):
         """Create a new page in Notion with a custom ID."""
-        logger.info(self.config)
         database_id = self.config["database_id"]
         field_mappings = self.config["field_mappings"]
         properties = self.build_properties(field_mappings, data)
@@ -140,6 +143,14 @@ class NotionClient:
         )
         logger.info(f"Page created in the database: {database_id}")
         return resp
+    
+    def update_or_create_page(self, data: dict, compare_field: str):
+        """Check the pages from the database for the last day and update the record if present,
+        create if not."""
+        logger.info("Running update or create sync...")
+        database_id = self.config["database_id"]
+        field_mappings = self.config["field_mappings"]
+        properties = self.build_properties(field_mappings, data)
     
 if __name__ == "__main__":
     logger.info("Notion Client")
