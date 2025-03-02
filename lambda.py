@@ -14,27 +14,30 @@ logger = get_logger()
 notion_config_path = Path(__file__).resolve().parent / "src" / "config" / "notion.config.yml"
 
 # Initialize services
-notion_client = NotionClient(str(notion_config_path))
 
 def sync_lingq(lingq_service):
     logger.info("Running LingQ sync...")
+    notion_client = NotionClient(str(notion_config_path), "lingq")
     word_counts = lingq_service.get_daily_word_counts()
     for word_count in word_counts:
-        notion_client.create_page("lingq", word_count)
+        notion_client.create_page(word_count)
     logger.info("LingQ sync completed.")
 
 def sync_whoop_workout(whoop_service):
     logger.info("Running Whoop workout sync...")
-    workouts = whoop_service.get_workouts_for_given_date(datetime.now().isoformat())
+    notion_client = NotionClient(str(notion_config_path), "whoop-workout")
+    
+    workouts = whoop_service.get_workouts_for_given_date(datetime.now().date())
     transformed_workouts = whoop_service.transform_workouts(workouts)
     for workout in transformed_workouts:
-        notion_client.create_page("whoop-workout", workout)
+        notion_client.update_or_create_page(workout, "id", "Whoop ID")
     logger.info("Whoop workout sync completed.")
 
 def sync_whoop_sleep_and_recovery(whoop_service):
     logger.info("Running Whoop sleep and recovery sync...")
+    notion_client = NotionClient(str(notion_config_path), "whoop-sleep-and-recovery")
     sleep_and_recovery = whoop_service.get_sleep_and_recovery(datetime.now().isoformat())
-    notion_client.create_page("whoop-sleep-and-recovery", sleep_and_recovery)
+    notion_client.update_or_create_page(sleep_and_recovery, "id", "Whoop ID")
     logger.info("Whoop sleep and recovery sync completed.")
 
 def mode_handler(mode):
