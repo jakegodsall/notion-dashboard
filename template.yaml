@@ -44,7 +44,7 @@ Resources:
         WhoopWorkoutSyncSchedule:
           Type: Schedule
           Properties:
-            Schedule: cron(55 23 * * ? *)
+            Schedule: rate(1 hour)
             Name: WhoopWorkoutSyncSchedule
             Description: Triggers the Lambda function daily at 23:55
             Enabled: true
@@ -73,7 +73,7 @@ Resources:
         WhoopSleepAndRecoverySchedule:
           Type: Schedule
           Properties:
-            Schedule: cron(0 10 * * ? *)
+            Schedule: rate(1 hour)
             Name: WhoopSleepAndRecoverySchedule
             Description: Triggers the Lambda function daily at 10:00
             Enabled: true

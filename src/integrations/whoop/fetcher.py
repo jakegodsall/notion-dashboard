@@ -1,6 +1,5 @@
 import os
-import logging
-from datetime import datetime, time, timezone
+from datetime import datetime
 from whoop import WhoopClient
 from src.integrations.whoop.sport_map import sport_map
 
@@ -46,7 +45,6 @@ class WhoopFetcher:
         try:
             sleep_data = self.get_sleep(date)
             recovery_data = self.get_recovery(date)
-
             result = {}
 
             try:
@@ -57,6 +55,7 @@ class WhoopFetcher:
                 # Calculate the "effective date" based on sleep end time
                 effective_date = sleep_end_datetime.date()
 
+                result["id"] = sleep_data["id"]
                 result["name"] = effective_date.isoformat()
                 result["date"] = effective_date.isoformat()
                 result["sleep_start_time"] = sleep_data["start"]
