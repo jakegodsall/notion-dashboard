@@ -148,8 +148,13 @@ class NotionClient:
                 }
             }
         })
-        
-        return pages.get('results', [])
+
+        pages = pages.get('results', [])
+        if not pages:
+            logger.info(f"No pages found for {isodate} in Notion database.")
+
+        return pages
+
 
     def create_page(self, data: dict):
         """Create a new page in Notion with a custom ID."""
