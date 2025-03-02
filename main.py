@@ -47,10 +47,10 @@ def sync_whoop_workouts(date=None):
         workouts = whoop_service.get_workouts_for_given_date(date)
         transformed_workouts = whoop_service.transform_workouts(workouts)
         for workout in transformed_workouts:
-            notion_client.create_page(workout)
-            logger.info(f"Pushed {workout['sport']} dactivity to Notion")            
+            # notion_client.create_page(workout)
+            logger.info(f"Pushed {workout['sport']} activity to Notion")            
 
-        notion_client.get_pages(date.isoformat())
+            notion_client.update_or_create_page(workout, 'id', 'Whoop ID')
         
     except Exception as e:
         logger.error(f"Error during Whoop workout sync: {e}")

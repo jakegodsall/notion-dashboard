@@ -1,6 +1,6 @@
 import os
 import yaml
-import datetime
+from datetime import datetime
 from notion_client import Client
 
 from src.utils.logger import get_logger
@@ -131,7 +131,6 @@ class NotionClient:
         """Get pages from the Notion database for the given day."""
         logger.info("Getting pages for the database id...")
 
-        # Ensure the date is in YYYY-MM-DD format
         try:
             isodate = datetime.strptime(isodate, '%Y-%m-%d').strftime('%Y-%m-%d')
         except ValueError:
@@ -155,7 +154,6 @@ class NotionClient:
 
         return pages
 
-
     def create_page(self, data: dict):
         """Create a new page in Notion with a custom ID."""
         database_id = self.config["database_id"]
@@ -169,13 +167,26 @@ class NotionClient:
         logger.info(f"Page created in the database: {database_id}")
         return resp
     
-    def update_or_create_page(self, data: dict, compare_field: str):
+    def update_or_create_page(self, data: dict, data_field: str, notion_field: str):
         """Check the pages from the database for the last day and update the record if present,
         create if not."""
         logger.info("Running update or create sync...")
-        database_id = self.config["database_id"]
+
         field_mappings = self.config["field_mappings"]
         properties = self.build_properties(field_mappings, data)
+
+        # Get the pages for today from the database
+        todays_pages = self.get_pages(datetime.now().strftime('%Y-%m-%d'))
+        matching = [page for page in todays_pages if page['properties'][notion_field]['number'] == data[data_field]]
+
+        if matching:  # Ensures there is at least one match before accessing index 0
+            matching_id = matching[0]['id']
+            logger.info("Match found. Updating page")
+            self.client.pages.update(page_id=matching_id, properties=properties)
+            logger.info("Page updated.")
+        else:
+            logger.info("No matching pages found. Creating a new page.")
+            self.create_page(data)
     
 if __name__ == "__main__":
     logger.info("Notion Client")
