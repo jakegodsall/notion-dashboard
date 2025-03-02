@@ -129,7 +129,27 @@ class NotionClient:
     
     def get_pages(self, isodate: str):
         """Get pages from the Notion database for the given day."""
-        self.client.pages.
+        logger.info("Getting pages for the database id...")
+
+        # Ensure the date is in YYYY-MM-DD format
+        try:
+            isodate = datetime.strptime(isodate, '%Y-%m-%d').strftime('%Y-%m-%d')
+        except ValueError:
+            logger.error(f'Invalid date format: {isodate}. Expected YYYY-MM-DD')
+
+        database_id = self.config["database_id"]
+
+        pages = self.client.databases.query(**{
+            "database_id": database_id,
+            "filter": {
+                "property": "Date",
+                "date": {
+                    "equals": isodate
+                }
+            }
+        })
+        
+        return pages.get('results', [])
 
     def create_page(self, data: dict):
         """Create a new page in Notion with a custom ID."""

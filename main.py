@@ -50,7 +50,8 @@ def sync_whoop_workouts(date=None):
             notion_client.create_page(workout)
             logger.info(f"Pushed {workout['sport']} dactivity to Notion")            
 
-
+        notion_client.get_pages(date.isoformat())
+        
     except Exception as e:
         logger.error(f"Error during Whoop workout sync: {e}")
     logger.info("Whoop workout sync completed.")
