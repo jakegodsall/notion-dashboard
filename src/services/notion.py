@@ -1,6 +1,6 @@
 import os
 import yaml
-from datetime import datetime
+from datetime import datetime, timedelta
 from notion_client import Client
 
 from src.utils.logger import get_logger
@@ -63,7 +63,7 @@ class NotionClient:
                     }
                 elif field_type == "number":
                     if config["key"] not in data:
-                        raise KeyError(f"Missing key '{config['key']}' in data for 'number' field.")
+                        raise KeyError(f"Missing key '{config['key']}' in data for 'number' field with field {field}.")
                     properties[label] = {
                         "number": data[config["key"]]
                     }
@@ -127,32 +127,31 @@ class NotionClient:
             return results[0]["id"]
         return None
     
-    def get_pages(self, isodate: str):
+    def get_pages(self, date_str: str):
         """Get pages from the Notion database for the given day."""
-        logger.info("Getting pages for the database id...")
-
+        logger.info(f"Getting pages for the database id {self.config['database_id']} for date: {date_str}")
         try:
-            isodate = datetime.strptime(isodate, '%Y-%m-%d').strftime('%Y-%m-%d')
-        except ValueError:
-            logger.error(f'Invalid date format: {isodate}. Expected YYYY-MM-DD')
+            database_id = self.config["database_id"]
 
-        database_id = self.config["database_id"]
+            next_day = (datetime.strptime(date_str, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
 
-        pages = self.client.databases.query(**{
-            "database_id": database_id,
-            "filter": {
-                "property": "Date",
-                "date": {
-                    "equals": isodate
+            pages = self.client.databases.query(**{
+                "database_id": database_id,
+                "filter": {
+                    "and": [
+                        {"property": "Date", "date": {"on_or_after": date_str}},
+                        {"property": "Date", "date": {"before": next_day}}
+                    ]
                 }
-            }
-        })
+            })
 
-        pages = pages.get('results', [])
-        if not pages:
-            logger.info(f"No pages found for {isodate} in Notion database.")
+            pages = pages.get('results', [])
+            if not pages:
+                logger.info(f"No pages found for {date_str} in Notion database.")
 
-        return pages
+            return pages
+        except ValueError:
+            logger.error(f'Invalid date format: {date_str}. Expected YYYY-MM-DD')
 
     def create_page(self, data: dict):
         """Create a new page in Notion with a custom ID."""
@@ -167,17 +166,20 @@ class NotionClient:
         logger.info(f"Page created in the database: {database_id}")
         return resp
     
-    def update_or_create_page(self, data: dict, data_field: str, notion_field: str):
-        """Check the pages from the database for the last day and update the record if present,
-        create if not."""
+    def update_or_create_page(self, date_str: str, data: dict, data_field: str, notion_field: str):
+        """
+        Check the pages from the database for the given day and update the record if present,
+        create if not.
+        """
         logger.info("Running update or create sync...")
 
         field_mappings = self.config["field_mappings"]
+
         properties = self.build_properties(field_mappings, data)
 
         # Get the pages for today from the database
-        todays_pages = self.get_pages(datetime.now().strftime('%Y-%m-%d'))
-        matching = [page for page in todays_pages if page['properties'][notion_field]['number'] == data[data_field]]
+        pages = self.get_pages(date_str)
+        matching = [page for page in pages if page['properties'][notion_field]['number'] == data[data_field]]
 
         if matching:  # Ensures there is at least one match before accessing index 0
             matching_id = matching[0]['id']

@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from whoop import WhoopClient
 from src.integrations.whoop.sport_map import sport_map
 
@@ -29,23 +29,24 @@ class WhoopFetcher:
     def get_profile(self):
         return self.client.get_profile()
     
-    def get_sleep(self, date):
-        start, end = get_datetimes_for_date(date)
+    def get_sleep(self, date_str):
+        start, end = get_datetimes_for_date(date_str)
+        logger.info(f"date_str: {date_str}, start: {start}, end: {end}")
         sleep_collection = self.client.get_sleep_collection(start, end)
         return sleep_collection[0]
     
-    def get_recovery(self, date):
-        start, end = get_datetimes_for_date(date)
+    def get_recovery(self, date_str):
+        start, end = get_datetimes_for_date(date_str)
         recovery_data = self.client.get_recovery_collection(start, end)
         return recovery_data[0]
     
-    from datetime import datetime, timedelta
-
     def get_sleep_and_recovery(self, date_str):
         try:
-            date = date.strptime(date_str, '%Y-%m-%d')
-            sleep_data = self.get_sleep(date)
-            recovery_data = self.get_recovery(date)
+            # We need to subtract a day as we are tracking sleep from the date of falling asleep rather than the date of waking
+            prev_date_str = (datetime.strptime(date_str, '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m-%d')
+
+            sleep_data = self.get_sleep(prev_date_str)
+            recovery_data = self.get_recovery(prev_date_str)
             result = {}
 
             try:
@@ -71,20 +72,20 @@ class WhoopFetcher:
                     result["sleep_consistency_percentage"] = None
                     result["sleep_efficiency_percentage"] = None
             except KeyError as e:
-                logger.error(f"Missing key in sleep data for date {date}: {e}")
-                raise ValueError(f"Incomplete sleep data for date {date}")
+                logger.error(f"Missing key in sleep data for date {date_str}: {e}")
+                raise ValueError(f"Incomplete sleep data for date {date_str}")
 
             try:
                 result["recovery_score"] = recovery_data["score"]["recovery_score"]
                 result["resting_heart_rate"] = recovery_data["score"]["resting_heart_rate"]
             except KeyError as e:
-                logger.error(f"Missing key in recovery data for date {date}: {e}")
-                raise ValueError(f"Incomplete recovery data for date {date}")
+                logger.error(f"Missing key in recovery data for date {date_str}: {e}")
+                raise ValueError(f"Incomplete recovery data for date {date_str}")
 
             return result
 
         except Exception as e:
-            logger.error(f"Error in get_sleep_and_recovery for date {date}: {e}")
+            logger.error(f"Error in get_sleep_and_recovery for date {date_str}: {e}")
             return None
 
     def get_workouts_for_given_date(self, date):

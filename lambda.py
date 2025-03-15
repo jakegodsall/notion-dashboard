@@ -29,14 +29,14 @@ def sync_whoop_workout(whoop_service, date_str):
     workouts = whoop_service.get_workouts_for_given_date(date_str)
     transformed_workouts = whoop_service.transform_workouts(workouts)
     for workout in transformed_workouts:
-        notion_client.update_or_create_page(workout, "id", "Whoop ID")
+        notion_client.update_or_create_page(date_str, workout, "id", "Whoop ID")
     logger.info("Whoop workout sync completed.")
 
 def sync_whoop_sleep_and_recovery(whoop_service, date_str):
     logger.info("Running Whoop sleep and recovery sync...")
     notion_client = NotionClient(str(notion_config_path), "whoop-sleep-and-recovery")
     sleep_and_recovery = whoop_service.get_sleep_and_recovery(date_str)
-    notion_client.update_or_create_page(sleep_and_recovery, "id", "Whoop ID")
+    notion_client.update_or_create_page(date_str, sleep_and_recovery, "id", "Whoop ID")
     logger.info("Whoop sleep and recovery sync completed.")
 
 def mode_handler(mode, date_str):
