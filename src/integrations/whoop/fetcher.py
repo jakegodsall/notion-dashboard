@@ -41,8 +41,9 @@ class WhoopFetcher:
     
     from datetime import datetime, timedelta
 
-    def get_sleep_and_recovery(self, date):
+    def get_sleep_and_recovery(self, date_str):
         try:
+            date = date.strptime(date_str, '%Y-%m-%d')
             sleep_data = self.get_sleep(date)
             recovery_data = self.get_recovery(date)
             result = {}

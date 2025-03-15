@@ -3,6 +3,7 @@
 
 # AWS
 .aws-sam/
+events/
 env.json
 samconfig.toml
 
