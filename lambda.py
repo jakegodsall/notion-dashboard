@@ -36,7 +36,7 @@ def sync_whoop_sleep_and_recovery(whoop_service, date_str):
     logger.info("Running Whoop sleep and recovery sync...")
     notion_client = NotionClient(str(notion_config_path), "whoop-sleep-and-recovery")
     sleep_and_recovery = whoop_service.get_sleep_and_recovery(date_str)
-    notion_client.update_or_create_page(date_str, sleep_and_recovery, "id", "Whoop ID")
+    notion_client.update_or_create_page(date_str, sleep_and_recovery, "id", "Whoop ID", use_two_day_period=True)
     logger.info("Whoop sleep and recovery sync completed.")
 
 def mode_handler(mode, date_str):

@@ -153,6 +153,34 @@ class NotionClient:
         except ValueError:
             logger.error(f'Invalid date format: {date_str}. Expected YYYY-MM-DD')
 
+    def get_pages_two_day_period(self, date_str: str):
+        """Get pages from the Notion database for the given day and previous day."""
+        logger.info(f"Getting pages for two day period ending on {date_str}")
+        try:
+            database_id = self.config["database_id"]
+            
+            # Get previous day
+            prev_day = (datetime.strptime(date_str, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")
+            next_day = (datetime.strptime(date_str, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
+            pages = self.client.databases.query(**{
+                "database_id": database_id,
+                "filter": {
+                    "and": [
+                        {"property": "Date", "date": {"on_or_after": prev_day}},
+                        {"property": "Date", "date": {"before": next_day}}
+                    ]
+                }
+            })
+
+            pages = pages.get('results', [])
+            if not pages:
+                logger.info(f"No pages found for period {prev_day} to {date_str} in Notion database.")
+
+            return pages
+        except ValueError:
+            logger.error(f'Invalid date format: {date_str}. Expected YYYY-MM-DD')
+
     def create_page(self, data: dict):
         """Create a new page in Notion with a custom ID."""
         database_id = self.config["database_id"]
@@ -166,19 +194,25 @@ class NotionClient:
         logger.info(f"Page created in the database: {database_id}")
         return resp
     
-    def update_or_create_page(self, date_str: str, data: dict, data_field: str, notion_field: str):
+    def update_or_create_page(self, date_str: str, data: dict, data_field: str, notion_field: str, use_two_day_period: bool = False):
         """
         Check the pages from the database for the given day and update the record if present,
         create if not.
+
+        Args:
+            date_str: The date to check for records
+            data: The data to update or create
+            data_field: The field in the data dict to match against
+            notion_field: The field in Notion to match against
+            use_two_day_period: Whether to check both the current and previous day for matches
         """
         logger.info("Running update or create sync...")
 
         field_mappings = self.config["field_mappings"]
-
         properties = self.build_properties(field_mappings, data)
 
-        # Get the pages for today from the database
-        pages = self.get_pages(date_str)
+        # Get the pages for the specified period from the database
+        pages = self.get_pages_two_day_period(date_str) if use_two_day_period else self.get_pages(date_str)
         matching = [page for page in pages if page['properties'][notion_field]['number'] == data[data_field]]
 
         if matching:  # Ensures there is at least one match before accessing index 0
