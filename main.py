@@ -1,7 +1,8 @@
-import argparse
+import typer
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Optional
 from src.integrations.lingq.fetcher import LingQFetcher
 from src.integrations.whoop.fetcher import WhoopFetcher
 from src.utils.logger import get_logger
@@ -20,6 +21,9 @@ notion_config_path = Path(__file__).resolve().parent / "src" / "config" / "notio
 lingq_service = LingQFetcher()
 whoop_service = WhoopFetcher()
 
+app = typer.Typer(help="Notion dashboard CLI: Sync data from multiple sources with Notion database tables.")
+whoop_app = typer.Typer(help="Whoop-related commands")
+app.add_typer(whoop_app, name="whoop")
 
 def sync_lingq():
     """
@@ -34,8 +38,17 @@ def sync_lingq():
         logger.info(f"[{datetime.now()}] LingQ sync completed.")
     except Exception as e:
         logger.error(f"Error during LingQ sync: {e}")
+        raise typer.Exit(code=1)
 
-def sync_whoop_workouts(date=None):
+@whoop_app.command("workouts")
+def sync_whoop_workouts(
+    date: Optional[str] = typer.Option(
+        None,
+        "--date", "-d",
+        help="Date for syncing Whoop data (in ISO8601 format, e.g. '2024-03-20'). Defaults to today."
+    )
+):
+    """Sync Whoop workout activity with Notion."""
     notion_client = NotionClient(str(notion_config_path), "whoop-workout")
     logger.info("Running Whoop workouts sync...")
     try:
@@ -47,14 +60,28 @@ def sync_whoop_workouts(date=None):
         workouts = whoop_service.get_workouts_for_given_date(date)
         transformed_workouts = whoop_service.transform_workouts(workouts)
         for workout in transformed_workouts:
-            notion_client.update_or_create_page(workout, 'id', 'Whoop ID')
+            notion_client.update_or_create_page(date.isoformat(), workout, 'id', 'Whoop ID')
             logger.info(f"Pushed {workout['sport']} activity to Notion")            
         
     except Exception as e:
         logger.error(f"Error during Whoop workout sync: {e}")
+        raise typer.Exit(code=1)
     logger.info("Whoop workout sync completed.")
 
-def sync_whoop_sleep_and_recovery(date=None, loop_until_first=False):
+@whoop_app.command("sleep")
+def sync_whoop_sleep_and_recovery(
+    date: Optional[str] = typer.Option(
+        None,
+        "--date", "-d",
+        help="Date for syncing Whoop data (in ISO8601 format, e.g. '2024-03-20'). Defaults to today."
+    ),
+    loop_until_first: bool = typer.Option(
+        False,
+        "--loop-until-first", "-l",
+        help="Loop through days, syncing data until the first day of available data is reached."
+    )
+):
+    """Sync Whoop sleep and recovery data with Notion."""
     notion_client = NotionClient(str(notion_config_path), "whoop-sleep-and-recovery")
     logger.info("Running Whoop sleep and recovery sync...")
     try:
@@ -65,10 +92,13 @@ def sync_whoop_sleep_and_recovery(date=None, loop_until_first=False):
             logger.info(f"Processing data for date: {date}")
 
             sleep_and_recovery = whoop_service.get_sleep_and_recovery(date)
-            logger.info(sleep_and_recovery)
             if sleep_and_recovery:
-                notion_client.create_page("whoop-sleep-and-recovery", sleep_and_recovery)
+                logger.info(f"Found sleep and recovery data for {date}")
+                logger.debug(f"Sleep and recovery data: {sleep_and_recovery}")
+                notion_client.update_or_create_page(date, sleep_and_recovery, "id", "Whoop ID", use_two_day_period=True)
                 logger.info(f"Data for {date} synced successfully.")
+            else:
+                logger.info(f"No sleep and recovery data found for {date}")
 
             if not loop_until_first or not sleep_and_recovery:
                 break
@@ -80,43 +110,12 @@ def sync_whoop_sleep_and_recovery(date=None, loop_until_first=False):
         logger.info("Whoop sleep and recovery sync completed.")
     except Exception as e:
         logger.error(f"Error during Whoop sleep and recovery sync: {e}")
+        raise typer.Exit(code=1)
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Notion dashboard CLI: Sync data from multiple sources with Notion database tables."
-    )
-    subparsers = parser.add_subparsers(dest="command", required=True, help="Available commands")
-
-    # TO IMPLEMENT (MAYBE)
-    # lingq_parser = subparsers.add_parser("sync-lingq", help="Sync current known word counts with Notion.")
-    
-    whoop_workout_parser = subparsers.add_parser("sync-whoop-workouts", help="Sync Whoop workout activity with Notion.")
-    whoop_workout_parser.add_argument(
-        "--date",
-        type=str,
-        help="Date for syncing Whoop data (in ISO8601 format, e.g. '2025-01-01'). Defaults to today."
-    )
-
-    whoop_recovery_parser = subparsers.add_parser("sync-whoop-sleep", help="Sync Whoop sleep and recovery data with Notion.")
-    whoop_recovery_parser.add_argument(
-        "--date",
-        type=str,
-        help="Date for syncing Whoop data (in ISO8601 format, e.g. '2025-01-01'). Defaults to today."
-    )
-    whoop_recovery_parser.add_argument(
-        "--loop-until-first",
-        action="store_true",
-        help="Loop through days, syncing data until the first day of available data is reached."
-    )
-
-    args = parser.parse_args()
-
-    if args.command == 'sync-lingq':
-        sync_lingq()
-    if args.command == 'sync-whoop-workouts':
-        sync_whoop_workouts(date=args.date)
-    if args.command == 'sync-whoop-sleep':
-        sync_whoop_sleep_and_recovery(date=args.date, loop_until_first=args.loop_until_first)
+@app.command()
+def lingq():
+    """Sync LingQ data with Notion."""
+    sync_lingq()
 
 if __name__ == "__main__":
-    main()
+    app()
