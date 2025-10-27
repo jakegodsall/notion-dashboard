@@ -21,6 +21,8 @@ Parameters:
 Resources:
   WhoopWorkoutSync:
     Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: python3.13
     Properties:
       CodeUri: .
       FunctionName: WhoopWorkoutSyncLambda
@@ -37,7 +39,7 @@ Resources:
       MemorySize: 256
       Timeout: 60
       Architectures:
-        - x86_64
+        - arm64
       Policies:
         - AWSLambdaBasicExecutionRole
       Events:
@@ -50,6 +52,8 @@ Resources:
             Enabled: true
   WhoopSleepAndRecovery:
     Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: python3.13
     Properties:
       CodeUri: .
       FunctionName: WhoopSleepAndRecoveryLambda
@@ -63,10 +67,10 @@ Resources:
           WHOOP_PASSWORD: !Ref WhoopPassword
           NOTION_API_KEY: !Ref NotionApiKey
       Runtime: python3.13
+      Architectures:
+        - arm64
       MemorySize: 256
       Timeout: 10
-      Architectures:
-        - x86_64
       Policies:
         - AWSLambdaBasicExecutionRole
       Events:
