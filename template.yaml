@@ -21,8 +21,6 @@ Parameters:
 Resources:
   WhoopWorkoutSync:
     Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: python3.13
     Properties:
       CodeUri: .
       FunctionName: WhoopWorkoutSyncLambda
@@ -52,8 +50,6 @@ Resources:
             Enabled: true
   WhoopSleepAndRecovery:
     Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: python3.13
     Properties:
       CodeUri: .
       FunctionName: WhoopSleepAndRecoveryLambda
